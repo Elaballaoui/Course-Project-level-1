@@ -13,6 +13,19 @@ function emailValidate($field)
     $field=filter_var(trim($field), FILTER_SANITIZE_EMAIL);
     if (filter_var($field, FILTER_VALIDATE_EMAIL)) {return $field;}else{return false;}
 }
+function canUpload($field){
+    $allowed=[
+        'jpg'=>'image/jpeg',
+        'png'=>'image/png',
+        'gif'=>'image/gif'
+    ];
+    $maxFileSize= 100 * 1024;
+    $mimeFileType=mime_content_type($field['tmp_name']);
+    if ($field['size']>$maxFileSize) return 'Your file is too large.';
+    if (!in_array($mimeFileType,$allowed)) return 'Invalid file type.';
+    if ($field['size']>$maxFileSize && !in_array($mimeFileType,$allowed)) return 'Invalid type and too large file.';
+    return true;
+}
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 //    echo '<pre>'; print_r($_POST); echo '</pre>';
 //    echo '<pre>'; print_r($_FILES['document']); echo '</pre>';
@@ -24,25 +37,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 //    ************************************************************************************
     $name=$_POST['name'];$email=$_POST['email'];$message=$_POST['message'];
     if (!stringValidate($_POST['name'])) $nameErr='Name is required';
-    if (!stringValidate($_POST['message'])) $nameErr='Message is required';
-    if (!emailValidate($_POST['email'])) $nameErr='Email is required';
+    if (!stringValidate($_POST['message'])) $messageErr='Message is required';
+    if (!emailValidate($_POST['email'])) $emailErr='Email is required';
 //    ************************************************************************************
     if (isset($_FILES['document']) && $_FILES['document']['error'] == 0) {
-        $allowed=[
-            'jpg'=>'image/jpeg',
-            'png'=>'image/png',
-            'gif'=>'image/gif'
-        ];
-        $maxFileSize= 12 * 1024;
-        $mimeFileType=mime_content_type($_FILES['document']['tmp_name']);
+        $fileName=$_FILES['document'];
+//            $allowed=[
+//                'jpg'=>'image/jpeg',
+//                'png'=>'image/png',
+//                'gif'=>'image/gif'
+//            ];
+//            $maxFileSize= 12 * 1024;
+//            $mimeFileType=mime_content_type($_FILES['document']['tmp_name']);
 //        if (!in_array($_FILES['document']['type'], $allowed)) die('Your uploaded file is not an image.');
 //        if ($_FILES['document']['size']>$maxFileSize) die('Your uploaded file is too large.');
 //        if (!in_array($mimeFileType,$allowed)) die('Your uploaded file is not a valid image.');
 //    ************************************************************************************
-        $documentFile=$_FILES['document']['name'];
-        if ($_FILES['document']['size']>$maxFileSize) $documentFileErr='Your file is too large.';
-        if (!in_array($mimeFileType,$allowed)) $documentFileErr='Invalid file type.';
-        if (($_FILES['document']['size']>$maxFileSize) && !in_array($mimeFileType,$allowed)) $documentFileErr='Invalid type and too large file.';
+//        $documentFile=$_FILES['document']['name'];
+//        if ($_FILES['document']['size']>$maxFileSize) $documentFileErr='Your file is too large.';
+//        if (!in_array($mimeFileType,$allowed)) $documentFileErr='Invalid file type.';
+//        if (($_FILES['document']['size']>$maxFileSize) && !in_array($mimeFileType,$allowed)) $documentFileErr='Invalid type and too large file.';
+        $canUpload=canUpload($fileName);
+        if (!empty($fileName)) return $documentFileErr=$canUpload;
     }
 }
 ?>
